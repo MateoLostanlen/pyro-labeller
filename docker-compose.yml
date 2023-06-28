@@ -19,3 +19,5 @@ services:
       - USERNAME=${USERNAME}
       - PASSWORD=${PASSWORD}
     restart: always
+    volumes:
+    - $HOME/.aws/credentials:/root/.aws/credentials:ro
