@@ -19,7 +19,9 @@ stop:
 	docker compose down
 
 log:
- 	docker logs pyro-labeller-task_manager-1 -f --tail 50
+	docker logs --tail 50 pyro-labeller-task_manager-1 -f
+	
 
 logapp:
-	docker logs pyro-labeller-task_manager-1 -f --tail 50
+	docker logs --tail 50 pyro-labeller-pyro_labeller-1 -f
+
