@@ -138,15 +138,15 @@ if __name__ == "__main__":
         task_list = get_task_list(host, credentials)
         for task in task_list:
             if task.status == "completed":
-                # try:
-                process_completed_task(pyro_bucket, task)
-                # except Exception:
-                #     logging.warning("Unable to process completed task")
+                try:
+                   process_completed_task(pyro_bucket, task)
+                except Exception:
+                    logging.warning("Unable to process completed task")
 
         task_list = get_task_list(host, credentials)
-        # try:
-        if sum([task.assignee is None for task in task_list]) < 10:
-            add_new_task(pyro_bucket, host, credentials)
-        # except Exception:
-        #     logging.warning("Unable to add new task")
+        try:
+            if sum([task.assignee is None for task in task_list]) < 10:
+               add_new_task(pyro_bucket, host, credentials)
+        except Exception:
+            logging.warning("Unable to add new task")
         time.sleep(max(update_delta - time.time() + start_ts, 0))
