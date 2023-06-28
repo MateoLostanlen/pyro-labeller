@@ -5,7 +5,7 @@ services:
     image: pyro_labeller:latest
     environment:
       - HOST=${HOST}
-      - USER=${USER}
+      - USERNAME=${USERNAME}
       - PASSWORD=${PASSWORD}
     restart: always
     ports:

@@ -33,4 +33,3 @@ if email:
 
 if st.button("Labélisation terminée", use_container_width=True):
     nav_page("thanks")
-    
