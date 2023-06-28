@@ -2,15 +2,15 @@ import glob
 import logging
 import os
 import shutil
+import time
 
 import boto3
 import pandas as pd
 from cvat_sdk import make_client
 from cvat_sdk.core.proxies.tasks import ResourceType
 from dotenv import load_dotenv
-import time
 
-logging.basicConfig(level = logging.INFO)
+logging.basicConfig(level=logging.INFO)
 
 
 def dl_from_s3(pyro_bucket, src, dst):
@@ -91,14 +91,16 @@ def add_new_task(pyro_bucket, host, credentials):
         shutil.rmtree(f"{task_name}_aws")
         logging.info(f"{task_name} added")
 
+
 def mark_task_done(pyro_bucket, task_name):
     dl_from_s3(pyro_bucket, "dataset_status.csv", "dataset_status.csv")
     df = pd.read_csv("dataset_status.csv", index_col=0)
-    df.loc[df['Name'] == task_name, "State"]="DONE"
+    df.loc[df["Name"] == task_name, "State"] = "DONE"
     df.to_csv("dataset_status.csv")
     up_to_s3(pyro_bucket, "dataset_status.csv", "dataset_status.csv")
     os.remove("dataset_status.csv")
     logging.info(f"{task_name} completed")
+
 
 def process_completed_task(pyro_bucket, task):
     # Get data
@@ -125,10 +127,9 @@ if __name__ == "__main__":
     username = os.environ.get("USERNAME")
     password = os.environ.get("PASSWORD")
     credentials = (username, password)
-    aws_access_key_id=os.environ.get("AWS_KEY")
-    aws_secret_access_key=os.environ.get("AWS_ACC")
-    resource = boto3.resource('s3', aws_access_key_id=aws_access_key_id,
-    aws_secret_access_key=aws_secret_access_key)
+    aws_access_key_id = os.environ.get("AWS_KEY")
+    aws_secret_access_key = os.environ.get("AWS_ACC")
+    resource = boto3.resource("s3", aws_access_key_id=aws_access_key_id, aws_secret_access_key=aws_secret_access_key)
     pyro_bucket = resource.Bucket("pyronear-data")
 
     update_delta = 30
@@ -139,14 +140,14 @@ if __name__ == "__main__":
         for task in task_list:
             if task.status == "completed":
                 try:
-                   process_completed_task(pyro_bucket, task)
+                    process_completed_task(pyro_bucket, task)
                 except Exception:
                     logging.warning("Unable to process completed task")
 
         task_list = get_task_list(host, credentials)
         try:
             if sum([task.assignee is None for task in task_list]) < 10:
-               add_new_task(pyro_bucket, host, credentials)
+                add_new_task(pyro_bucket, host, credentials)
         except Exception:
             logging.warning("Unable to add new task")
         time.sleep(max(update_delta - time.time() + start_ts, 0))

@@ -1,8 +1,10 @@
+import os
+
 import streamlit as st
 from cvat_manager import create_user
-from utils import get_ip, nav_page
 from dotenv import load_dotenv
-import os
+from utils import nav_page
+
 st.set_page_config(
     page_title="Pyronear Annotation Tool",
     page_icon="👋",
@@ -40,4 +42,4 @@ if email:
 if not email:
 
     if st.button("Entrée", use_container_width=True):
-        a=1
+        a = 1

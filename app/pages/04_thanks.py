@@ -18,4 +18,3 @@ st.write(f"N’hésite pas à partager [l’initiative]({url}) à tes proches")
 st.subheader("☝️ Tu es dispo 15 minutes de plus ?")
 
 st.write("Clique à nouveau sur [ce lien]({cvat_url}) pour labeliser d’autres images")
-
