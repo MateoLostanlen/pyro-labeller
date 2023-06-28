@@ -5,7 +5,6 @@ import shutil
 
 import boto3
 import pandas as pd
-from boto3.session import Session
 from cvat_sdk import make_client
 from cvat_sdk.core.proxies.tasks import ResourceType
 from dotenv import load_dotenv
@@ -14,23 +13,23 @@ import time
 logging.basicConfig(level = logging.INFO)
 
 
-def dl_from_s3(session, bucket, src, dst):
-    session.resource("s3").Bucket(bucket).download_file(Key=src, Filename=dst)
+def dl_from_s3(pyro_bucket, src, dst):
+    pyro_bucket.download_file(Key=src, Filename=dst)
 
 
-def up_to_s3(session, bucket, src, dst):
-    session.resource("s3").Bucket(bucket).upload_file(Key=src, Filename=dst)
+def up_to_s3(pyro_bucket, src, dst):
+    pyro_bucket.upload_file(Key=src, Filename=dst)
 
 
-def get_task(session):
-    dl_from_s3(session, bucket, "dataset_status.csv", "dataset_status.csv")
+def get_task(pyro_bucket):
+    dl_from_s3(pyro_bucket, "dataset_status.csv", "dataset_status.csv")
     df = pd.read_csv("dataset_status.csv", index_col=0)
     for i in range(len(df)):
         data = df.iloc[i]
         if str(data["State"]) == "TODO":
             df.at[i, "State"] = "ONGOING"
             df.to_csv("dataset_status.csv")
-            up_to_s3(session, bucket, "dataset_status.csv", "dataset_status.csv")
+            up_to_s3(pyro_bucket, "dataset_status.csv", "dataset_status.csv")
             os.remove("dataset_status.csv")
             return str(data["Name"])
 
@@ -63,12 +62,12 @@ def get_task_list(host, credentials):
         return client.tasks.list()
 
 
-def add_new_task(session, host, credentials):
+def add_new_task(pyro_bucket, host, credentials):
     # Get data
-    task_name = get_task(session)
+    task_name = get_task(pyro_bucket)
     logging.info(f"add task {task_name}")
     if task_name is not None:
-        dl_from_s3(session, bucket, f"to-annotate/{task_name}.zip", f"{task_name}.zip")
+        dl_from_s3(pyro_bucket, f"to-annotate/{task_name}.zip", f"{task_name}.zip")
         shutil.unpack_archive(f"{task_name}.zip", f"{task_name}_aws", "zip")
         # Create task
         create_task(host, credentials, task_name, f"{task_name}_aws")
@@ -92,16 +91,16 @@ def add_new_task(session, host, credentials):
         shutil.rmtree(f"{task_name}_aws")
         logging.info(f"{task_name} added")
 
-def mark_task_done(session, task_name):
-    dl_from_s3(session, bucket, "dataset_status.csv", "dataset_status.csv")
+def mark_task_done(pyro_bucket, task_name):
+    dl_from_s3(pyro_bucket, "dataset_status.csv", "dataset_status.csv")
     df = pd.read_csv("dataset_status.csv", index_col=0)
     df.loc[df['Name'] == task_name, "State"]="DONE"
     df.to_csv("dataset_status.csv")
-    up_to_s3(session, bucket, "dataset_status.csv", "dataset_status.csv")
+    up_to_s3(pyro_bucket, "dataset_status.csv", "dataset_status.csv")
     os.remove("dataset_status.csv")
     logging.info(f"{task_name} completed")
 
-def process_completed_task(session, task):
+def process_completed_task(pyro_bucket, task):
     # Get data
     task_name = task.name
     task.export_dataset(format_name="YOLO 1.1", filename=f"{task_name}.zip")
@@ -111,18 +110,17 @@ def process_completed_task(session, task):
     [os.remove(file) for file in imgs]
     # Upload to S3
     shutil.make_archive(task_name, "zip", task_name)
-    up_to_s3(session, bucket, f"done/{task_name}.zip", f"{task_name}.zip")
+    up_to_s3(pyro_bucket, f"done/{task_name}.zip", f"{task_name}.zip")
     # Clean
-    mark_task_done(session, task_name)
+    mark_task_done(pyro_bucket, task_name)
     os.remove(f"{task_name}.zip")
     shutil.rmtree(task_name)
     task.remove()
 
 
 if __name__ == "__main__":
-    s3 = boto3.resource("s3")
-    session = Session()
-    bucket = "pyronear-data"
+    resource = boto3.resource('s3')
+    pyro_bucket = resource.Bucket("pyronear-data")
     load_dotenv(".env")
     host = os.environ.get("HOST")
     username = os.environ.get("USERNAME")
@@ -137,14 +135,14 @@ if __name__ == "__main__":
         for task in task_list:
             if task.status == "completed":
                 try:
-                    process_completed_task(session, task)
+                    process_completed_task(pyro_bucket, task)
                 except Exception:
                     logging.warning("Unable to process completed task")
 
         task_list = get_task_list(host, credentials)
         try:
             if sum([task.assignee is None for task in task_list]) < 10:
-                add_new_task(session, host, credentials)
+                add_new_task(pyro_bucket, host, credentials)
         except Exception:
             logging.warning("Unable to add new task")
         time.sleep(max(update_delta - time.time() + start_ts, 0))
