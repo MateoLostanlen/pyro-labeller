@@ -64,6 +64,7 @@ def get_task_list(host, credentials):
 def add_new_task(session, host, credentials):
     # Get data
     task_name = get_task(session)
+    logging.info(f"add task {task_name}")
     if task_name is not None:
         dl_from_s3(session, bucket, f"to-annotate/{task_name}.zip", f"{task_name}.zip")
         shutil.unpack_archive(f"{task_name}.zip", f"{task_name}_aws", "zip")
@@ -87,6 +88,7 @@ def add_new_task(session, host, credentials):
         os.remove(f"{task_name}.zip")
         shutil.rmtree(task_name)
         shutil.rmtree(f"{task_name}_aws")
+        logging.info(f"{task_name} added")
 
 def mark_task_done(session, task_name):
     dl_from_s3(session, bucket, "dataset_status.csv", "dataset_status.csv")
@@ -95,7 +97,7 @@ def mark_task_done(session, task_name):
     df.to_csv("dataset_status.csv")
     up_to_s3(session, bucket, "dataset_status.csv", "dataset_status.csv")
     os.remove("dataset_status.csv")
-    
+    logging.info(f"{task_name} completed")
 
 def process_completed_task(session, task):
     # Get data
