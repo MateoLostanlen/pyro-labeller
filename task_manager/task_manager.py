@@ -9,6 +9,7 @@ from boto3.session import Session
 from cvat_sdk import make_client
 from cvat_sdk.core.proxies.tasks import ResourceType
 from dotenv import load_dotenv
+import time
 
 
 def dl_from_s3(session, bucket, src, dst):
@@ -28,6 +29,7 @@ def get_task(session):
             df.at[i, "State"] = "ONGOING"
             df.to_csv("dataset_status.csv")
             up_to_s3(session, bucket, "dataset_status.csv", "dataset_status.csv")
+            os.remove("dataset_status.csv")
             return str(data["Name"])
 
 
@@ -86,6 +88,13 @@ def add_new_task(session, host, credentials):
         shutil.rmtree(task_name)
         shutil.rmtree(f"{task_name}_aws")
 
+def mark_task_done(session, task_name):
+    dl_from_s3(session, bucket, "dataset_status.csv", "dataset_status.csv")
+    df = pd.read_csv("dataset_status.csv", index_col=0)
+    df.loc[df['Name'] == task_name, "State"]="DONE"
+    df.to_csv("dataset_status.csv")
+    up_to_s3(session, bucket, "dataset_status.csv", "dataset_status.csv")
+    os.remove("dataset_status.csv")
 
 def process_completed_task(session, task):
     # Get data
@@ -99,6 +108,7 @@ def process_completed_task(session, task):
     shutil.make_archive(task_name, "zip", task_name)
     up_to_s3(session, bucket, f"done/{task_name}.zip", f"{task_name}.zip")
     # Clean
+    mark_task_done(session, task_name)
     os.remove(f"{task_name}.zip")
     shutil.rmtree(task_name)
     task.remove()
@@ -106,30 +116,30 @@ def process_completed_task(session, task):
 
 if __name__ == "__main__":
     s3 = boto3.resource("s3")
-session = Session()
-bucket = "pyronear-data"
-load_dotenv(".env")
-host = os.environ.get("HOST")
-username = os.environ.get("USERNAME")
-password = os.environ.get("PASSWORD")
-credentials = (username, password)
+    session = Session()
+    bucket = "pyronear-data"
+    load_dotenv(".env")
+    host = os.environ.get("HOST")
+    username = os.environ.get("USERNAME")
+    password = os.environ.get("PASSWORD")
+    credentials = (username, password)
 
-update_delta = 30
+    update_delta = 30
 
-while True:
-    start_ts = time.time()
-    task_list = get_task_list(host, credentials)
-    for task in task_list:
-        if task.status == "completed":
-            try:
-                process_completed_task(session, task)
-            except Exception:
-                logging.warning("Unable to process completed task")
+    while True:
+        start_ts = time.time()
+        task_list = get_task_list(host, credentials)
+        for task in task_list:
+            if task.status == "completed":
+                try:
+                    process_completed_task(session, task)
+                except Exception:
+                    logging.warning("Unable to process completed task")
 
-    task_list = get_task_list(host, credentials)
-    try:
-        if sum([task.assignee is None for task in task_list]) < 10:
-            add_new_task(session, host, credentials)
-    except Exception:
-        logging.warning("Unable to add new task")
-    time.sleep(max(update_delta - time.time() + start_ts, 0))
+        task_list = get_task_list(host, credentials)
+        try:
+            if sum([task.assignee is None for task in task_list]) < 10:
+                add_new_task(session, host, credentials)
+        except Exception:
+            logging.warning("Unable to add new task")
+        time.sleep(max(update_delta - time.time() + start_ts, 0))
