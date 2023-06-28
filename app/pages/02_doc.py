@@ -10,8 +10,8 @@ st.image("logo.png", use_column_width=True)
 
 st.subheader("📄 On t’a préparé un pack labélisateur qui résume toutes les étapes")
 
-
-st.write("Clique sur [ce lien](https://bayesimpact.notion.site/D-tecter-des-d-parts-de-feux-avec-Pyronear-b2e9b50b7ceb4a50b2870622096b58cd?pvs=4) pour y accéder ")
+l = "https://bayesimpact.notion.site/D-tecter-des-d-parts-de-feux-avec-Pyronear-b2e9b50b7ceb4a50b2870622096b58cd?pvs=4"
+st.write(f"Clique sur [ce lien]({l}) pour y accéder ")
 
 
 if st.button("Commencer la labélisation d'images", use_container_width=True):

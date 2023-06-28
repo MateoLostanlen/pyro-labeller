@@ -1,5 +1,5 @@
 import streamlit as st
-from utils import nav_page, get_ip
+from utils import get_ip
 
 st.set_page_config(
     page_title="Pyronear Annotation Tool",
@@ -18,5 +18,3 @@ st.write(f"N’hésite pas à partager [l’initiative]({url}) à tes proches")
 st.subheader("☝️ Tu es dispo 15 minutes de plus ?")
 
 st.write("Clique à nouveau sur ce lien pour labeliser d’autres images")
-
-

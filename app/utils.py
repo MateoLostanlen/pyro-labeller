@@ -1,6 +1,7 @@
-from streamlit.components.v1 import html
-import streamlit as st
 import socket
+
+import streamlit as st
+from streamlit.components.v1 import html
 
 
 def nav_page(page_name, timeout_secs=3):
@@ -25,13 +26,16 @@ def nav_page(page_name, timeout_secs=3):
                 attempt_nav_page("%s", new Date(), %d);
             });
         </script>
-    """ % (page_name, timeout_secs)
+    """ % (
+        page_name,
+        timeout_secs,
+    )
     html(nav_script)
 
 
-def redirect_button(url: str, text: str= None, color="#FD504D"):
+def redirect_button(url: str, text: str = None, color="#FD504D"):
     st.markdown(
-    f"""
+        f"""
     <a href="{url}" target="_self">
         <div style="
             display: inline-block;
@@ -44,11 +48,11 @@ def redirect_button(url: str, text: str= None, color="#FD504D"):
         </div>
     </a>
     """,
-    unsafe_allow_html=True
+        unsafe_allow_html=True,
     )
+
 
 def get_ip():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     s.connect(("8.8.8.8", 80))
     return s.getsockname()[0]
-    

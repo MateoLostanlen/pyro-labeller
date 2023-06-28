@@ -1,0 +1,10 @@
+[tool.isort]
+line_length = 120
+profile = "black"
+skip_glob = "**/__init__.py"
+
+
+[tool.black]
+line-length = 120
+target-version = ['py38']
+
