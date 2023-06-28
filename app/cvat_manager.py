@@ -41,9 +41,18 @@ def add_to_organization(configuration, email):
             print("Exception when calling InvitationsApi.create(): %s\n" % e)
 
 
+def assign_task(host, credentials):
+    with make_client(host=host, credentials=credentials) as client:
+        client.organization_slug = "Pyronear"
+        task_list =  client.tasks.list()[:5][::-1] # take backward to avoid unfish task setup
+        user =  client.users.list()[0] # take last user
+        for task in task_list:
+            if task.assignee is None:
+                task.update({'assignee_id': user.id})
+
 def create_user(email):
     configuration = get_configuration()
-
+    
     user_idx = get_new_user_idx(configuration)
     username = f"pyro_user_{str(user_idx).zfill(9)}"
     password = gen_password()
@@ -62,6 +71,7 @@ def create_user(email):
                 register_serializer_ex_request,
             )
             add_to_organization(configuration, email)
+            assign_task(configuration.host, (configuration.username, configuration.password))
             return (username, password)
         except exceptions.ApiException as e:
             err_msg = "Exception when calling AuthApi.create_register(): %s\n" % e
