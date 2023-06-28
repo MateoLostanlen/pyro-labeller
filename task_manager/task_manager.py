@@ -114,7 +114,10 @@ username = os.environ.get("USERNAME")
 password = os.environ.get("PASSWORD")
 credentials = (username, password)
 
+update_delta = 30
+
 while True:
+    start_ts = time.time()
     task_list = get_task_list(host, credentials)
     for task in task_list:
         if task.status == "completed":
@@ -129,3 +132,4 @@ while True:
             add_new_task(session, host, credentials)
     except Exception:
         logging.warning("Unable to add new task")
+    time.sleep(max(update_delta - time.time() + start_ts, 0))
