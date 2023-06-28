@@ -11,6 +11,8 @@ from cvat_sdk.core.proxies.tasks import ResourceType
 from dotenv import load_dotenv
 import time
 
+logging.basicConfig(level = logging.INFO)
+
 
 def dl_from_s3(session, bucket, src, dst):
     session.resource("s3").Bucket(bucket).download_file(Key=src, Filename=dst)
