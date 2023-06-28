@@ -12,4 +12,8 @@ style:
 # Run app
 run:
 	docker build -t pyro_labeller:latest .
+	docker build -t task_manager:latest -f task_manager/Dockerfile task_manager/
 	docker compose up -d
+
+stop:
+	docker compose down

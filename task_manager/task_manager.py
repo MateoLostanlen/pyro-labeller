@@ -95,6 +95,7 @@ def mark_task_done(session, task_name):
     df.to_csv("dataset_status.csv")
     up_to_s3(session, bucket, "dataset_status.csv", "dataset_status.csv")
     os.remove("dataset_status.csv")
+    
 
 def process_completed_task(session, task):
     # Get data
