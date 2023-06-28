@@ -1,3 +1,5 @@
 streamlit
 black
 flake8
+cvat_sdk
+python-dotenv

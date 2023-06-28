@@ -11,4 +11,5 @@ style:
 
 # Run app
 run:
-	docker build -t pyro_labeller .
+	docker build -t pyro_labeller:latest .
+	docker-compose up

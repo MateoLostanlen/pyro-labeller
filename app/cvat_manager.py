@@ -3,6 +3,10 @@ import secrets
 from cvat_sdk.api_client import ApiClient, Configuration, exceptions
 from cvat_sdk.api_client.models import InvitationWriteRequest, RegisterSerializerExRequest, RoleEnum
 from utils import get_ip
+import os
+from dotenv import load_dotenv
+
+
 
 
 def gen_password():
@@ -12,12 +16,13 @@ def gen_password():
 
 def get_configuration():
 
-    return Configuration(
-        host=f"http://{get_ip()}:8080",
-        username="mateo",
-        password="mateo",
-    )
+    load_dotenv(".env")
 
+    return Configuration(
+        host=os.environ.get("HOST"),
+        username=os.environ.get("USER"),
+        password=os.environ.get("PASSWORD"),
+    )
 
 def get_new_user_idx(configuration):
     with ApiClient(configuration) as api_client:
@@ -40,7 +45,11 @@ def add_to_organization(configuration, email):
 
 
 def create_user(email):
+    print("dd")
     configuration = get_configuration()
+
+   
+    
     user_idx = get_new_user_idx(configuration)
     username = f"pyro_user_{str(user_idx).zfill(9)}"
     password = gen_password()

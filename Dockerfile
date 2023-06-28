@@ -13,9 +13,8 @@ RUN apt-get update\
     && rm -rf /root/.cache/pip
 
 
-
-EXPOSE 8501
 COPY ./app/ /usr/src/app/
+COPY ./logo.png /usr/src/app/logo.png
 
 
 ENTRYPOINT ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0"]
