@@ -54,7 +54,6 @@ def assign_task(host, credentials):
 
 def create_user(email):
     configuration = get_configuration()
-
     user_idx = get_new_user_idx(configuration)
     username = f"pyro_user_{str(user_idx).zfill(9)}"
     password = gen_password()
