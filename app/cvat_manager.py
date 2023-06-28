@@ -1,6 +1,7 @@
 import os
 import secrets
 
+from cvat_sdk import make_client
 from cvat_sdk.api_client import ApiClient, Configuration, exceptions
 from cvat_sdk.api_client.models import InvitationWriteRequest, RegisterSerializerExRequest, RoleEnum
 from dotenv import load_dotenv
@@ -44,15 +45,16 @@ def add_to_organization(configuration, email):
 def assign_task(host, credentials):
     with make_client(host=host, credentials=credentials) as client:
         client.organization_slug = "Pyronear"
-        task_list =  client.tasks.list()[:5][::-1] # take backward to avoid unfish task setup
-        user =  client.users.list()[0] # take last user
+        task_list = client.tasks.list()[:5][::-1]  # take backward to avoid unfish task setup
+        user = client.users.list()[0]  # take last user
         for task in task_list:
             if task.assignee is None:
-                task.update({'assignee_id': user.id})
+                task.update({"assignee_id": user.id})
+
 
 def create_user(email):
     configuration = get_configuration()
-    
+
     user_idx = get_new_user_idx(configuration)
     username = f"pyro_user_{str(user_idx).zfill(9)}"
     password = gen_password()
