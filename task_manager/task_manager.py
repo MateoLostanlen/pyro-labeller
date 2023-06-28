@@ -44,7 +44,7 @@ def create_task(host, credentials, name, folder):
             "labels": [{"name": "smoke", "color": "#ff00ff", "attributes": []}],
         }
 
-        imgs = glob.glob(folder + "/*.jpg")[:5]
+        imgs = glob.glob(folder + "/*.jpg")
 
         data_params = {}
         data_params["image_quality"] = 80
