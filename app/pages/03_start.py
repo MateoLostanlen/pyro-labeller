@@ -34,5 +34,10 @@ if email:
 
         st.write(f"Tu peux acceder à l'outil de labelisation [ici]({cvat_url})")
 
-if st.button("Labélisation terminée", use_container_width=True):
-    nav_page("thanks")
+    if st.button("Labélisation terminée", use_container_width=True):
+        nav_page("thanks")
+
+if not email:
+
+    if st.button("Entrée", use_container_width=True):
+        a=1
