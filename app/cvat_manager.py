@@ -50,6 +50,7 @@ def assign_task(host, credentials):
         for task in task_list:
             if task.assignee is None:
                 task.update({"assignee_id": user.id})
+                break
 
 
 def create_user(email):
