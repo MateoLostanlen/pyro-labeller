@@ -8,3 +8,7 @@ quality:
 style:
 	isort .
 	black .
+
+# Run app
+run:
+	docker build -t pyro_labeller .
