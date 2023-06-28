@@ -12,4 +12,4 @@ style:
 # Run app
 run:
 	docker build -t pyro_labeller:latest .
-	docker-compose up -d
+	docker compose up -d
