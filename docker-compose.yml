@@ -18,6 +18,7 @@ services:
       - HOST=${HOST}
       - USERNAME=${USERNAME}
       - PASSWORD=${PASSWORD}
+      - AWS_KEY=${AWS_KEY}
+      - AWS_ACC=${AWS_ACC}
     restart: always
-    volumes:
-    - $HOME/.aws/credentials:/root/.aws/credentials:ro
+ 

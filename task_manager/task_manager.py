@@ -119,13 +119,17 @@ def process_completed_task(pyro_bucket, task):
 
 
 if __name__ == "__main__":
-    resource = boto3.resource('s3')
-    pyro_bucket = resource.Bucket("pyronear-data")
+
     load_dotenv(".env")
     host = os.environ.get("HOST")
     username = os.environ.get("USERNAME")
     password = os.environ.get("PASSWORD")
     credentials = (username, password)
+    aws_access_key_id=os.environ.get("AWS_KEY")
+    aws_secret_access_key=os.environ.get("AWS_ACC")
+    resource = boto3.resource('s3', aws_access_key_id=aws_access_key_id,
+    aws_secret_access_key=aws_secret_access_key)
+    pyro_bucket = resource.Bucket("pyronear-data")
 
     update_delta = 30
 
@@ -134,15 +138,15 @@ if __name__ == "__main__":
         task_list = get_task_list(host, credentials)
         for task in task_list:
             if task.status == "completed":
-                try:
-                    process_completed_task(pyro_bucket, task)
-                except Exception:
-                    logging.warning("Unable to process completed task")
+                # try:
+                process_completed_task(pyro_bucket, task)
+                # except Exception:
+                #     logging.warning("Unable to process completed task")
 
         task_list = get_task_list(host, credentials)
-        try:
-            if sum([task.assignee is None for task in task_list]) < 10:
-                add_new_task(pyro_bucket, host, credentials)
-        except Exception:
-            logging.warning("Unable to add new task")
+        # try:
+        if sum([task.assignee is None for task in task_list]) < 10:
+            add_new_task(pyro_bucket, host, credentials)
+        # except Exception:
+        #     logging.warning("Unable to add new task")
         time.sleep(max(update_delta - time.time() + start_ts, 0))
