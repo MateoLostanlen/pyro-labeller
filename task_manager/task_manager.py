@@ -3,7 +3,7 @@ import logging
 import os
 import shutil
 import time
-
+from datetime import datetime
 import boto3
 import pandas as pd
 from cvat_sdk import make_client
@@ -61,8 +61,18 @@ def get_task_list(host, credentials):
         client.organization_slug = "Pyronear"
         return client.tasks.list()
 
+def register_task(task_name, task_id):
+    if not os.path.isfile("data/task_database.csv"):
+        df = pd.DataFrame({'task_id':[task_id], 'task_name':task_name, 'assign':[None], 'create_time': [datetime.now()], 'assign_time': [None]})
+        
+    else:
+        df = pd.read_csv("data/task_database.csv", index_col=0)
+        new_row = pd.DataFrame({'task_id':[task_id], 'task_name':task_name, 'assign':[None], 'create_time': [datetime.now()], 'assign_time': [None]})
+        df = pd.concat([df, new_row], ignore_index=True)
+    df.to_csv("data/task_database.csv")
 
-def add_new_task(pyro_bucket, host, credentials):
+
+def add_new_task(pyro_bucket, host, credentials, task_id):
     # Get data
     task_name = get_task(pyro_bucket)
     logging.info(f"add task {task_name}")
@@ -85,6 +95,7 @@ def add_new_task(pyro_bucket, host, credentials):
         os.remove(f"{task_name}.zip")
         shutil.make_archive(task_name, "zip", task_name)
         task.import_annotations(format_name="YOLO 1.1", filename=f"{task_name}.zip")
+        register_task(task_name, task_id)
         # Clean
         os.remove(f"{task_name}.zip")
         shutil.rmtree(task_name)
@@ -104,6 +115,7 @@ def mark_task_done(pyro_bucket, task_name):
 
 def process_completed_task(pyro_bucket, task):
     # Get data
+    del_task(task.id)
     task_name = task.name
     task.export_dataset(format_name="YOLO 1.1", filename=f"{task_name}.zip")
     shutil.unpack_archive(f"{task_name}.zip", f"{task_name}", "zip")
@@ -132,22 +144,32 @@ if __name__ == "__main__":
     resource = boto3.resource("s3", aws_access_key_id=aws_access_key_id, aws_secret_access_key=aws_secret_access_key)
     pyro_bucket = resource.Bucket("pyronear-data")
 
+    # Clean
+    # Delete all task
+    task_list = get_task_list(host, credentials)
+    [task.remove() for task in task_list] 
+    if os.path.isfile("data/task_database.csv"):
+        os.remove("data/task_database.csv")
+
     update_delta = 30
 
     while True:
         start_ts = time.time()
         task_list = get_task_list(host, credentials)
+        try:
+            if sum([task.assignee is None for task in task_list]) < 10:
+                if len(task_list)>0:
+                    task_id = task_list[0].id + 1
+                else:
+                    task_id = 1
+                add_new_task(pyro_bucket, host, credentials, task_id)
+        except Exception:
+            logging.warning("Unable to add new task")
+          
         for task in task_list:
             if task.status == "completed":
                 try:
                     process_completed_task(pyro_bucket, task)
                 except Exception:
                     logging.warning("Unable to process completed task")
-
-        task_list = get_task_list(host, credentials)
-        try:
-            if sum([task.assignee is None for task in task_list]) < 10:
-                add_new_task(pyro_bucket, host, credentials)
-        except Exception:
-            logging.warning("Unable to add new task")
         time.sleep(max(update_delta - time.time() + start_ts, 0))

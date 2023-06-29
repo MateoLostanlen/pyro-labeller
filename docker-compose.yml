@@ -1,5 +1,5 @@
 version: '3.8'
-
+name: pyro
 services:
   pyro_labeller:
     image: pyro_labeller:latest
@@ -8,6 +8,8 @@ services:
       - USERNAME=${USERNAME}
       - PASSWORD=${PASSWORD}
     restart: always
+    volumes:
+      - /home/mateo/pyronear/dataset/annotation_pipe/pyro-labeller/data:/usr/src/app/data
     ports:
       - 8501:8501
 
@@ -21,4 +23,6 @@ services:
       - AWS_KEY=${AWS_KEY}
       - AWS_ACC=${AWS_ACC}
     restart: always
+    volumes:
+      - /home/mateo/pyronear/dataset/annotation_pipe/pyro-labeller/data:/usr/src/app/data
  

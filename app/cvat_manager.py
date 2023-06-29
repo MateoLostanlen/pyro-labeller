@@ -5,7 +5,10 @@ from cvat_sdk import make_client
 from cvat_sdk.api_client import ApiClient, Configuration, exceptions
 from cvat_sdk.api_client.models import InvitationWriteRequest, RegisterSerializerExRequest, RoleEnum
 from dotenv import load_dotenv
-
+import logging
+import time
+import pandas as pd
+from datetime import datetime
 
 def gen_password():
     password = secrets.token_urlsafe(12).replace("-", "").replace("_", "")
@@ -45,18 +48,21 @@ def add_to_organization(configuration, email):
 def assign_task(host, credentials):
     with make_client(host=host, credentials=credentials) as client:
         client.organization_slug = "Pyronear"
-        task_list = client.tasks.list()[:5][::-1]  # take backward to avoid unfish task setup
         user = client.users.list()[0]  # take last user
-        for task in task_list:
-            if task.assignee is None:
-                task.update({"assignee_id": user.id})
-                break
+        df = pd.read_csv("data/task_database.csv", index_col=0)
+        df_free = df.loc[df['assign'].isnull()]
+        task_id = int(df_free.iloc[0]["task_id"])
+        df.loc[df['task_id'] == task_id,["assign", "assign_time"]]=[user.id, datetime.now()]
+        df.to_csv("data/task_database.csv")
+        task = client.tasks.retrieve(task_id)
+        task.update({"assignee_id": user.id})
 
 
-def create_user(email):
+def create_user():
     configuration = get_configuration()
     user_idx = get_new_user_idx(configuration)
     username = f"pyro_user_{str(user_idx).zfill(9)}"
+    email = f"{username}@pyronear.org"
     password = gen_password()
     with ApiClient(configuration) as api_client:
         register_serializer_ex_request = RegisterSerializerExRequest(
@@ -74,6 +80,7 @@ def create_user(email):
             )
             add_to_organization(configuration, email)
             assign_task(configuration.host, (configuration.username, configuration.password))
+        
             return (username, password)
         except exceptions.ApiException as e:
             err_msg = "Exception when calling AuthApi.create_register(): %s\n" % e
