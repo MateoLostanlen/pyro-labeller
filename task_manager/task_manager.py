@@ -24,6 +24,8 @@ def up_to_s3(pyro_bucket, src, dst):
 def get_task(pyro_bucket):
     dl_from_s3(pyro_bucket, "dataset_status.csv", "dataset_status.csv")
     df = pd.read_csv("dataset_status.csv", index_col=0)
+    if len(df[df["State"]=="TODO"])==0:
+        df["State"] = ["TODO"]*len(df)
     for i in range(len(df)):
         data = df.iloc[i]
         if str(data["State"]) == "TODO":
@@ -124,7 +126,7 @@ def process_completed_task(pyro_bucket, task):
     [os.remove(file) for file in imgs]
     # Upload to S3
     shutil.make_archive(task_name, "zip", task_name)
-    up_to_s3(pyro_bucket, f"done/{task_name}.zip", f"{task_name}.zip")
+    up_to_s3(pyro_bucket, f"done/{task_name}_{datetime.now().isoformat()}.zip", f"{task_name}.zip")
     # Clean
     mark_task_done(pyro_bucket, task_name)
     os.remove(f"{task_name}.zip")
