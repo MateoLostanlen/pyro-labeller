@@ -1,14 +1,12 @@
 import os
 import secrets
+from datetime import datetime
 
+import pandas as pd
 from cvat_sdk import make_client
 from cvat_sdk.api_client import ApiClient, Configuration, exceptions
 from cvat_sdk.api_client.models import InvitationWriteRequest, RegisterSerializerExRequest, RoleEnum
 from dotenv import load_dotenv
-import logging
-import time
-import pandas as pd
-from datetime import datetime
 
 
 def gen_password():

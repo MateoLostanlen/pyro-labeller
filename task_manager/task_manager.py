@@ -4,6 +4,7 @@ import os
 import shutil
 import time
 from datetime import datetime
+
 import boto3
 import pandas as pd
 from cvat_sdk import make_client
@@ -24,8 +25,8 @@ def up_to_s3(pyro_bucket, src, dst):
 def get_task(pyro_bucket):
     dl_from_s3(pyro_bucket, "dataset_status.csv", "dataset_status.csv")
     df = pd.read_csv("dataset_status.csv", index_col=0)
-    if len(df[df["State"]=="TODO"])==0:
-        df["State"] = ["TODO"]*len(df)
+    if len(df[df["State"] == "TODO"]) == 0:
+        df["State"] = ["TODO"] * len(df)
     for i in range(len(df)):
         data = df.iloc[i]
         if str(data["State"]) == "TODO":
@@ -67,13 +68,30 @@ def get_task_list(host, credentials):
         client.organization_slug = "Pyronear"
         return client.tasks.list()
 
+
 def register_task(task_name, task_id):
     if not os.path.isfile("data/task_database.csv"):
-        df = pd.DataFrame({'task_id':[task_id], 'task_name':task_name, 'assign':[None], 'create_time': [datetime.now()], 'assign_time': [None]})
+        df = pd.DataFrame(
+            {
+                "task_id": [task_id],
+                "task_name": task_name,
+                "assign": [None],
+                "create_time": [datetime.now()],
+                "assign_time": [None],
+            }
+        )
 
     else:
         df = pd.read_csv("data/task_database.csv", index_col=0)
-        new_row = pd.DataFrame({'task_id':[task_id], 'task_name':task_name, 'assign':[None], 'create_time': [datetime.now()], 'assign_time': [None]})
+        new_row = pd.DataFrame(
+            {
+                "task_id": [task_id],
+                "task_name": task_name,
+                "assign": [None],
+                "create_time": [datetime.now()],
+                "assign_time": [None],
+            }
+        )
         df = pd.concat([df, new_row], ignore_index=True)
     df.to_csv("data/task_database.csv")
 
@@ -115,6 +133,7 @@ def mark_task_done(pyro_bucket, task_name):
     up_to_s3(pyro_bucket, "dataset_status.csv", "dataset_status.csv")
     os.remove("dataset_status.csv")
     logging.info(f"{task_name} completed")
+
 
 def del_task(task_id):
     df = pd.read_csv("data/task_database.csv", index_col=0)
