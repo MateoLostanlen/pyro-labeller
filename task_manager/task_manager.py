@@ -132,7 +132,7 @@ def add_new_task(pyro_bucket, host, credentials):
         # Clean
         if os.path.isfile(f"{task_name}.zip"):
             os.remove(f"{task_name}.zip")
-        if os.path.isfile(task_name):    
+        if os.path.isfile(task_name):
             shutil.rmtree(task_name)
         if os.path.isfile(f"{task_name}_aws"):
             shutil.rmtree(f"{task_name}_aws")
@@ -208,7 +208,7 @@ if __name__ == "__main__":
                     logging.warning("Unable to process completed task")
             else:
                 try:
-                    if len(task.get_frames_info())==0:
+                    if len(task.get_frames_info()) == 0:
                         task.remove()
                 except Exception:
                     logging.warning("Unable to remove empty task")
