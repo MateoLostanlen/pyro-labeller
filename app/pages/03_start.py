@@ -21,6 +21,11 @@ st.image("logo.png", use_column_width=True)
 
 st.subheader("💻 On va te rediriger vers un logiciel open-source pour labeliser des images")
 
+st.write(
+    """Nous utilisons [CVAT](https://www.cvat.ai/) pour réaliser l’annotation, le seul navigateur officiellement
+    supporté par CVAT est Google Chrome, nous te recommandons de l’utiliser pour une expérience plus fluide."""
+)
+
 if st.button("Générer des identifiants, ca peut prendre quelques secondes ⏳", use_container_width=True):
 
     st.write("Voici tes identifiants, note les bien pour accéder à la plateforme :")
