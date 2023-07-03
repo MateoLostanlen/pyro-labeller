@@ -10,6 +10,7 @@ import time
 import pandas as pd
 from datetime import datetime
 
+
 def gen_password():
     password = secrets.token_urlsafe(12).replace("-", "").replace("_", "")
     return password[:10]
@@ -50,9 +51,9 @@ def assign_task(host, credentials):
         client.organization_slug = "Pyronear"
         user = client.users.list()[0]  # take last user
         df = pd.read_csv("data/task_database.csv", index_col=0)
-        df_free = df.loc[df['assign'].isnull()]
+        df_free = df.loc[df["assign"].isnull()]
         task_id = int(df_free.iloc[0]["task_id"])
-        df.loc[df['task_id'] == task_id,["assign", "assign_time"]]=[user.id, datetime.now()]
+        df.loc[df["task_id"] == task_id, ["assign", "assign_time"]] = [user.id, datetime.now()]
         df.to_csv("data/task_database.csv")
         task = client.tasks.retrieve(task_id)
         task.update({"assignee_id": user.id})
@@ -80,7 +81,7 @@ def create_user():
             )
             add_to_organization(configuration, email)
             assign_task(configuration.host, (configuration.username, configuration.password))
-        
+
             return (username, password)
         except exceptions.ApiException as e:
             err_msg = "Exception when calling AuthApi.create_register(): %s\n" % e
