@@ -195,6 +195,20 @@ def reassign_old_task():
         df.to_csv("data/task_database.csv")
 
 
+def drop_removed_task(task_list):
+    task_list_id = [task.id for task in task_list]
+    if os.path.isfile("data/task_database.csv"):
+        df = pd.read_csv("data/task_database.csv", index_col=0)
+        to_drop = []
+        for i in range(len(df)):
+            data = df.iloc[i]
+            if data["task_id"] not in task_list_id:
+                to_drop.append(i)
+
+        df = df.drop(index=to_drop)
+        df.to_csv("data/task_database.csv")
+
+
 if __name__ == "__main__":
 
     load_dotenv(".env")
@@ -211,8 +225,10 @@ if __name__ == "__main__":
 
     while True:
         start_ts = time.time()
-        reassign_old_task()
         task_list = get_task_list(host, credentials)
+        drop_removed_task(task_list)
+        reassign_old_task()
+
         try:
             if sum([task.assignee is None for task in task_list]) < 10:
                 add_new_task(pyro_bucket, host, credentials)
