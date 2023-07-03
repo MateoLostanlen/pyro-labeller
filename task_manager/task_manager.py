@@ -247,5 +247,4 @@ if __name__ == "__main__":
                         task.remove()
                 except Exception:
                     logging.warning("Unable to remove empty task")
-        time.sleep(1)
-        time.sleep(max(update_delta - time.time() + start_ts, 0))
+        time.sleep(max(update_delta - time.time() + start_ts, 1))
