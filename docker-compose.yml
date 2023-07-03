@@ -9,7 +9,7 @@ services:
       - PASSWORD=${PASSWORD}
     restart: always
     volumes:
-      - /home/mateo/pyronear/dataset/annotation_pipe/pyro-labeller/data:/usr/src/app/data
+      - "$PWD/data:/usr/src/app/data"
     ports:
       - 8501:8501
 
@@ -24,5 +24,5 @@ services:
       - AWS_ACC=${AWS_ACC}
     restart: always
     volumes:
-      - /home/mateo/pyronear/dataset/annotation_pipe/pyro-labeller/data:/usr/src/app/data
+      - "$PWD/data:/usr/src/app/data"
  

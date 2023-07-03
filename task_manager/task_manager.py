@@ -105,10 +105,10 @@ def add_new_task(pyro_bucket, host, credentials):
         shutil.unpack_archive(f"{task_name}.zip", f"{task_name}_aws", "zip")
         # Create task
         time.sleep(0.5)
-        try:
-            task = create_task(host, credentials, task_name, f"{task_name}_aws")
-        except Exception:
-            logging.warning(f"Fail to create task {task_name}")
+    
+        task = create_task(host, credentials, task_name, f"{task_name}_aws")
+        register_task(task_name, task.id)
+  
         try:
             os.remove(f"{task_name}.zip")
             # Update labels
@@ -124,7 +124,7 @@ def add_new_task(pyro_bucket, host, credentials):
             shutil.make_archive(task_name, "zip", task_name)
             time.sleep(0.5)
             task.import_annotations(format_name="YOLO 1.1", filename=f"{task_name}.zip")
-            register_task(task_name, task.id)
+            # register_task(task_name, task.id)
 
         except Exception:
             task.remove()
