@@ -15,7 +15,7 @@ st.write(
      On appelle cela la “labélisation” d’images."""
 )
 
-st.video("https://www.youtube.com/watch?v=VDRVk8anWA0&t=22s")
+st.video("https://youtu.be/9LZ7qygC9ic")
 
 if st.button("J’ai visionné la vidéo", use_container_width=True):
     nav_page("doc")
