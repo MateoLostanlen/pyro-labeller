@@ -176,6 +176,21 @@ def process_completed_task(pyro_bucket, task):
     task.remove()
     logging.info(f"completed task: {task_name} was processed")
 
+def reassign_old_task():
+    if os.path.isfile("data/task_database.csv"):
+        df = pd.read_csv("data/task_database.csv", index_col=0)
+        for i in range(len(df)):
+            data = df.iloc[i]
+            assign_time = data["assign_time"]
+            if assign_time is not None:
+                assign_time = datetime.strptime(assign_time.split('.')[0], "%Y-%m-%d %H:%M:%S")
+                dt = datetime.now() - assign_time
+                if dt.days >= 3:
+                    df.at[i, "assign"] = None
+                    df.at[i, "assign_time"] = None
+
+        df.to_csv("data/task_database.csv")
+
 
 if __name__ == "__main__":
 
@@ -193,6 +208,7 @@ if __name__ == "__main__":
 
     while True:
         start_ts = time.time()
+        reassign_old_task()
         task_list = get_task_list(host, credentials)
         try:
             if sum([task.assignee is None for task in task_list]) < 10:
