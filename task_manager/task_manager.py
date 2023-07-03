@@ -180,15 +180,17 @@ def process_completed_task(pyro_bucket, task):
 def reassign_old_task():
     if os.path.isfile("data/task_database.csv"):
         df = pd.read_csv("data/task_database.csv", index_col=0)
-        for i in range(len(df)):
-            data = df.iloc[i]
+        df_assigned = df.loc[~df["assign"].isnull()]
+        for i in range(len(df_assigned)):
+            data = df[df["task_id"] == df_assigned.iloc[i]["task_id"]]
+            idx = data.index[0]
             assign_time = data["assign_time"]
             if assign_time is not None:
-                assign_time = datetime.strptime(assign_time.split(".")[0], "%Y-%m-%d %H:%M:%S")
+                assign_time = datetime.strptime(assign_time.values[0].split(".")[0], "%Y-%m-%d %H:%M:%S")
                 dt = datetime.now() - assign_time
-                if dt.days >= 3:
-                    df.at[i, "assign"] = None
-                    df.at[i, "assign_time"] = None
+                if dt.days >= 1:
+                    df.at[idx, "assign"] = None
+                    df.at[idx, "assign_time"] = None
 
         df.to_csv("data/task_database.csv")
 
