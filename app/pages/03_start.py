@@ -23,10 +23,7 @@ st.subheader("💻 On va te rediriger vers un logiciel open-source pour labelise
 
 if st.button("Générer des identifiants, ca peut prendre quelques secondes ⏳", use_container_width=True):
 
-    st.write(
-        """Voici tes identifiants, note les bien pour accéder à la plateforme.
-         Tu peux utiliser ton email ou ton username comme login"""
-    )
+    st.write("Voici tes identifiants, note les bien pour accéder à la plateforme :")
     (username, password) = create_user()
     if password is None:
         st.write(username)
