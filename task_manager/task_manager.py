@@ -50,12 +50,16 @@ def create_task(host, credentials, name, folder):
         data_params = {}
         data_params["image_quality"] = 80
 
-        client.tasks.create_from_data(
+        task = client.tasks.create_from_data(
             spec=task_spec,
             data_params=data_params,
             resource_type=ResourceType.LOCAL,
             resources=[file for file in imgs],
         )
+
+        task.fetch()
+
+        return task
 
 
 def get_task_list(host, credentials):
@@ -66,7 +70,7 @@ def get_task_list(host, credentials):
 def register_task(task_name, task_id):
     if not os.path.isfile("data/task_database.csv"):
         df = pd.DataFrame({'task_id':[task_id], 'task_name':task_name, 'assign':[None], 'create_time': [datetime.now()], 'assign_time': [None]})
-        
+
     else:
         df = pd.read_csv("data/task_database.csv", index_col=0)
         new_row = pd.DataFrame({'task_id':[task_id], 'task_name':task_name, 'assign':[None], 'create_time': [datetime.now()], 'assign_time': [None]})
@@ -74,7 +78,7 @@ def register_task(task_name, task_id):
     df.to_csv("data/task_database.csv")
 
 
-def add_new_task(pyro_bucket, host, credentials, task_id):
+def add_new_task(pyro_bucket, host, credentials):
     # Get data
     task_name = get_task(pyro_bucket)
     logging.info(f"add task {task_name}")
@@ -82,11 +86,9 @@ def add_new_task(pyro_bucket, host, credentials, task_id):
         dl_from_s3(pyro_bucket, f"to-annotate/{task_name}.zip", f"{task_name}.zip")
         shutil.unpack_archive(f"{task_name}.zip", f"{task_name}_aws", "zip")
         # Create task
-        create_task(host, credentials, task_name, f"{task_name}_aws")
+        task = create_task(host, credentials, task_name, f"{task_name}_aws")
         os.remove(f"{task_name}.zip")
         # Update labels
-        task_list = get_task_list(host, credentials)[:5]
-        task = task_list[0]
         task.export_dataset(format_name="YOLO 1.1", filename=f"{task_name}.zip")
         shutil.unpack_archive(f"{task_name}.zip", f"{task_name}", "zip")
         labels = glob.glob(f"{task_name}_aws/labels/*.txt")
@@ -97,7 +99,7 @@ def add_new_task(pyro_bucket, host, credentials, task_id):
         os.remove(f"{task_name}.zip")
         shutil.make_archive(task_name, "zip", task_name)
         task.import_annotations(format_name="YOLO 1.1", filename=f"{task_name}.zip")
-        register_task(task_name, task_id)
+        register_task(task_name, task.id)
         # Clean
         os.remove(f"{task_name}.zip")
         shutil.rmtree(task_name)
@@ -114,11 +116,17 @@ def mark_task_done(pyro_bucket, task_name):
     os.remove("dataset_status.csv")
     logging.info(f"{task_name} completed")
 
+def del_task(task_id):
+    df = pd.read_csv("data/task_database.csv", index_col=0)
+    df = df[df.task_id != task_id]
+    df.to_csv("data/task_database.csv")
+
 
 def process_completed_task(pyro_bucket, task):
     # Get data
     del_task(task.id)
     task_name = task.name
+    logging.info(f"Process completed task: {task_name}")
     task.export_dataset(format_name="YOLO 1.1", filename=f"{task_name}.zip")
     shutil.unpack_archive(f"{task_name}.zip", f"{task_name}", "zip")
     # Drop images
@@ -132,6 +140,7 @@ def process_completed_task(pyro_bucket, task):
     os.remove(f"{task_name}.zip")
     shutil.rmtree(task_name)
     task.remove()
+    logging.info(f"completed task: {task_name} was processed")
 
 
 if __name__ == "__main__":
@@ -146,12 +155,12 @@ if __name__ == "__main__":
     resource = boto3.resource("s3", aws_access_key_id=aws_access_key_id, aws_secret_access_key=aws_secret_access_key)
     pyro_bucket = resource.Bucket("pyronear-data")
 
-    # Clean
-    # Delete all task
-    task_list = get_task_list(host, credentials)
-    [task.remove() for task in task_list] 
-    if os.path.isfile("data/task_database.csv"):
-        os.remove("data/task_database.csv")
+    # # Clean
+    # # Delete all task
+    # task_list = get_task_list(host, credentials)
+    # [task.remove() for task in task_list]
+    # if os.path.isfile("data/task_database.csv"):
+    #     os.remove("data/task_database.csv")
 
     update_delta = 30
 
@@ -160,14 +169,10 @@ if __name__ == "__main__":
         task_list = get_task_list(host, credentials)
         try:
             if sum([task.assignee is None for task in task_list]) < 10:
-                if len(task_list)>0:
-                    task_id = task_list[0].id + 1
-                else:
-                    task_id = 1
-                add_new_task(pyro_bucket, host, credentials, task_id)
+                add_new_task(pyro_bucket, host, credentials)
         except Exception:
             logging.warning("Unable to add new task")
-          
+
         for task in task_list:
             if task.status == "completed":
                 try:
