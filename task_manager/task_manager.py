@@ -104,24 +104,39 @@ def add_new_task(pyro_bucket, host, credentials):
         dl_from_s3(pyro_bucket, f"to-annotate/{task_name}.zip", f"{task_name}.zip")
         shutil.unpack_archive(f"{task_name}.zip", f"{task_name}_aws", "zip")
         # Create task
-        task = create_task(host, credentials, task_name, f"{task_name}_aws")
-        os.remove(f"{task_name}.zip")
-        # Update labels
-        task.export_dataset(format_name="YOLO 1.1", filename=f"{task_name}.zip")
-        shutil.unpack_archive(f"{task_name}.zip", f"{task_name}", "zip")
-        labels = glob.glob(f"{task_name}_aws/labels/*.txt")
-        for label_file in labels:
-            new_label = os.path.join(task_name, "obj_train_data", os.path.basename(label_file))
-            if os.path.isfile(new_label):
-                shutil.copy(label_file, new_label)
-        os.remove(f"{task_name}.zip")
-        shutil.make_archive(task_name, "zip", task_name)
-        task.import_annotations(format_name="YOLO 1.1", filename=f"{task_name}.zip")
-        register_task(task_name, task.id)
+        time.sleep(0.5)
+        try:
+            task = create_task(host, credentials, task_name, f"{task_name}_aws")
+        except Exception:
+            logging.warning(f"Fail to create task {task_name}")
+        try:
+            os.remove(f"{task_name}.zip")
+            # Update labels
+            time.sleep(0.5)
+            task.export_dataset(format_name="YOLO 1.1", filename=f"{task_name}.zip")
+            shutil.unpack_archive(f"{task_name}.zip", f"{task_name}", "zip")
+            labels = glob.glob(f"{task_name}_aws/labels/*.txt")
+            for label_file in labels:
+                new_label = os.path.join(task_name, "obj_train_data", os.path.basename(label_file))
+                if os.path.isfile(new_label):
+                    shutil.copy(label_file, new_label)
+            os.remove(f"{task_name}.zip")
+            shutil.make_archive(task_name, "zip", task_name)
+            time.sleep(0.5)
+            task.import_annotations(format_name="YOLO 1.1", filename=f"{task_name}.zip")
+            register_task(task_name, task.id)
+
+        except Exception:
+            task.remove()
+            logging.warning("Remove task if creation failed")
         # Clean
-        os.remove(f"{task_name}.zip")
-        shutil.rmtree(task_name)
-        shutil.rmtree(f"{task_name}_aws")
+        if os.path.isfile(f"{task_name}.zip"):
+            os.remove(f"{task_name}.zip")
+        if os.path.isfile(task_name):    
+            shutil.rmtree(task_name)
+        if os.path.isfile(f"{task_name}_aws"):
+            shutil.rmtree(f"{task_name}_aws")
+
         logging.info(f"{task_name} added")
 
 
@@ -174,13 +189,6 @@ if __name__ == "__main__":
     resource = boto3.resource("s3", aws_access_key_id=aws_access_key_id, aws_secret_access_key=aws_secret_access_key)
     pyro_bucket = resource.Bucket("pyronear-data")
 
-    # # Clean
-    # # Delete all task
-    # task_list = get_task_list(host, credentials)
-    # [task.remove() for task in task_list]
-    # if os.path.isfile("data/task_database.csv"):
-    #     os.remove("data/task_database.csv")
-
     update_delta = 30
 
     while True:
@@ -198,4 +206,11 @@ if __name__ == "__main__":
                     process_completed_task(pyro_bucket, task)
                 except Exception:
                     logging.warning("Unable to process completed task")
+            else:
+                try:
+                    if len(task.get_frames_info())==0:
+                        task.remove()
+                except Exception:
+                    logging.warning("Unable to remove empty task")
+        time.sleep(1)
         time.sleep(max(update_delta - time.time() + start_ts, 0))
