@@ -235,6 +235,7 @@ if __name__ == "__main__":
     pyro_bucket = resource.Bucket("pyronear-data")
 
     update_delta = 30
+    number_of_task_to_load = 30
 
     while True:
         start_ts = time.time()
@@ -244,7 +245,7 @@ if __name__ == "__main__":
         dl_labels(aws_access_key_id, aws_secret_access_key)
 
         try:
-            if sum([task.assignee is None for task in task_list]) < 10:
+            if sum([task.assignee is None for task in task_list]) < number_of_task_to_load:
                 add_new_task(pyro_bucket, host, credentials)
         except Exception:
             logging.warning("Unable to add new task")
