@@ -2,3 +2,4 @@ boto3
 pandas
 cvat_sdk
 python-dotenv
+s3fs
