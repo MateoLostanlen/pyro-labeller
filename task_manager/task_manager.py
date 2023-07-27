@@ -7,6 +7,7 @@ from datetime import datetime
 
 import boto3
 import pandas as pd
+import s3fs
 from cvat_sdk import make_client
 from cvat_sdk.core.proxies.tasks import ResourceType
 from dotenv import load_dotenv
@@ -23,15 +24,15 @@ def up_to_s3(pyro_bucket, src, dst):
 
 
 def dl_labels(aws_access_key_id, aws_secret_access_key):
-    s3 = s3fs.S3FileSystem(anon=False,key=aws_access_key_id, secret=aws_secret_access_key)
-    labels = s3.glob('pyronear-data/done/*.zip')
+    s3 = s3fs.S3FileSystem(anon=False, key=aws_access_key_id, secret=aws_secret_access_key)
+    labels = s3.glob("pyronear-data/done/*.zip")
     os.makedirs("data/labels/", exist_ok=True)
     for label in labels:
-        label = label.split('pyronear-data/')[1]
+        label = label.split("pyronear-data/")[1]
         local_file = "data/labels/" + os.path.basename(label)
         if not os.path.isfile(local_file):
             dl_from_s3(pyro_bucket, label, local_file)
-            shutil.unpack_archive(local_file, local_file.split('.zip')[0], "zip")
+            shutil.unpack_archive(local_file, local_file.split(".zip")[0], "zip")
 
 
 def get_task(pyro_bucket):
