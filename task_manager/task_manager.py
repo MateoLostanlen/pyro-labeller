@@ -22,6 +22,18 @@ def up_to_s3(pyro_bucket, src, dst):
     pyro_bucket.upload_file(Key=src, Filename=dst)
 
 
+def dl_labels(aws_access_key_id, aws_secret_access_key):
+    s3 = s3fs.S3FileSystem(anon=False,key=aws_access_key_id, secret=aws_secret_access_key)
+    labels = s3.glob('pyronear-data/done/*.zip')
+    os.makedirs("data/labels/", exist_ok=True)
+    for label in labels:
+        label = label.split('pyronear-data/')[1]
+        local_file = "data/labels/" + os.path.basename(label)
+        if not os.path.isfile(local_file):
+            dl_from_s3(pyro_bucket, label, local_file)
+            shutil.unpack_archive(local_file, local_file.split('.zip')[0], "zip")
+
+
 def get_task(pyro_bucket):
     dl_from_s3(pyro_bucket, "dataset_status.csv", "dataset_status.csv")
     df = pd.read_csv("dataset_status.csv", index_col=0)
@@ -228,6 +240,7 @@ if __name__ == "__main__":
         task_list = get_task_list(host, credentials)
         drop_removed_task(task_list)
         reassign_old_task()
+        dl_labels(aws_access_key_id, aws_secret_access_key)
 
         try:
             if sum([task.assignee is None for task in task_list]) < 10:
