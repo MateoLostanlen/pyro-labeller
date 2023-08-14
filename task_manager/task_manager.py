@@ -25,6 +25,7 @@ def up_to_s3(pyro_bucket, src, dst):
 
 def dl_labels(aws_access_key_id, aws_secret_access_key):
     s3 = s3fs.S3FileSystem(anon=False, key=aws_access_key_id, secret=aws_secret_access_key)
+    s3.invalidate_cache()
     labels = s3.glob("pyronear-data/done/*.zip")
     os.makedirs("data/labels/", exist_ok=True)
     for label in labels:
