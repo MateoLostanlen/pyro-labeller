@@ -10,11 +10,11 @@ st.set_page_config(
 
 # Count labels
 label_files = glob.glob("data/labels/**/obj_train_data/*.txt")
-nb_wf = 0
-for file in label_files:
-    with open(file) as f:
-        lines = f.readlines()
-    nb_wf += len(lines)
+# nb_wf = 0
+# for file in label_files:
+#     with open(file) as f:
+#         lines = f.readlines()
+#     nb_wf += len(lines)
 
 st.image("logo.png", use_column_width=True)
 
@@ -32,7 +32,7 @@ nous avons déjà annoté :
 
 col1, col2 = st.columns(2)
 col1.metric("Images", len(label_files), delta=None, delta_color="normal", help=None, label_visibility="visible")
-col2.metric("Images avec un feu", nb_wf, delta=None, delta_color="normal", help=None, label_visibility="visible")
+# col2.metric("Images avec un feu", nb_wf, delta=None, delta_color="normal", help=None, label_visibility="visible")
 
 if st.button("Détecter des feux", use_container_width=True):
     nav_page("tuto_video")
