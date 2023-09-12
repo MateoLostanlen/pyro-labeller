@@ -191,7 +191,7 @@ def add_new_task(task_name, pyro_bucket, host, credentials):
             shutil.unpack_archive(f"data/tasks/{task_name}.zip", f"data/tasks/{task_name}", "zip")
             labels = glob.glob(f"data/aws/{task_name}/labels/*.txt")
             for label_file in labels:
-                new_label = os.path.join(task_name, "obj_train_data", os.path.basename(label_file))
+                new_label = os.path.join(f"data/tasks/{task_name}", "obj_train_data", os.path.basename(label_file))
                 if os.path.isfile(new_label):
                     shutil.copy(label_file, new_label)
             os.remove(f"data/tasks/{task_name}.zip")
