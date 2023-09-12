@@ -1,9 +1,24 @@
 import os
+from datetime import datetime
 
+import pandas as pd
 import streamlit as st
-from cvat_manager import create_user
 from dotenv import load_dotenv
 from utils import nav_page
+
+
+def get_credentials():
+    df = pd.read_csv("data/task_database.csv", index_col=0)
+    df_free = df.loc[df["assign_time"].isnull()]
+    if len(df_free) > 0:
+        data = df_free.iloc[0]
+        df.loc[df["username"] == data.username, ["assign_time"]] = datetime.now()
+        df.to_csv("data/task_database.csv")
+        return data.username, data.password
+
+    else:
+        return None, None
+
 
 # Initialization
 if "done" not in st.session_state:
@@ -29,9 +44,9 @@ st.write(
 if st.button("Générer des identifiants, ca peut prendre quelques secondes ⏳", use_container_width=True):
 
     st.write("Voici tes identifiants, note les bien pour accéder à la plateforme :")
-    (username, password) = create_user()
+    (username, password) = get_credentials()
     if password is None:
-        st.write(username)
+        st.write(f"Il n'y a plus de tâche d'annotation disponible, merci de réessayer plus tard")
     else:
         st.write("username: ", username)
         st.write("password: ", password)

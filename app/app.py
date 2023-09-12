@@ -25,7 +25,7 @@ st.write("#### 15 minutes de ton temps pour lutter contre les incendies")
 st.write(
     f"""[Pyronear](https://pyronear.org/) s’est donné pour mission de créer une solution open source de détection détection précoce, performante,
  automatique, énergiquement sobre, économique et modulable des départs de feux dans les espaces naturels.
-Grâce à toi et à des centaines d’autres contributeurs nous allons améliorer notre algorithme de détection, 
+Grâce à toi et à des centaines d’autres contributeurs nous allons améliorer notre algorithme de détection,
 nous avons déjà annoté :
 """
 )
