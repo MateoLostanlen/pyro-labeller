@@ -126,10 +126,10 @@ def create_task(host, credentials, name, folder):
             "labels": [{"name": "smoke", "color": "#ff00ff", "attributes": []}],
         }
 
-        imgs = glob.glob(folder + "/*.jpg")[:5]
+        imgs = glob.glob(folder + "/*.jpg")
 
         data_params = {}
-        data_params["image_quality"] = 20
+        data_params["image_quality"] = 80
 
         task = client.tasks.create_from_data(
             spec=task_spec,
@@ -285,7 +285,7 @@ if __name__ == "__main__":
     resource = boto3.resource("s3", aws_access_key_id=aws_access_key_id, aws_secret_access_key=aws_secret_access_key)
     pyro_bucket = resource.Bucket("pyronear-data")
 
-    update_delta = 5
+    update_delta = 3
 
     while True:
         start_ts = time.time()
@@ -295,42 +295,42 @@ if __name__ == "__main__":
         except Exception:
             logging.warning("Unable to dl labels")
 
-        # try:
-        # Check available tasks
-        s3 = s3fs.S3FileSystem(anon=False, key=aws_access_key_id, secret=aws_secret_access_key)
-        s3.invalidate_cache()
-        s3_tasks = s3.glob("pyronear-data/to-annotate/*.zip")
+        try:
+            # Check available tasks
+            s3 = s3fs.S3FileSystem(anon=False, key=aws_access_key_id, secret=aws_secret_access_key)
+            s3.invalidate_cache()
+            s3_tasks = s3.glob("pyronear-data/to-annotate/*.zip")
 
-        # Add missing ones
-        for task_file in s3_tasks[:5]:
-            task_name = os.path.basename(task_file).split(".")[0]
-            if not os.path.isfile(f"data/tasks/{task_name}.zip"):
-                add_new_task(task_name, pyro_bucket, host, credentials)
+            # Add missing ones
+            for task_file in s3_tasks:
+                task_name = os.path.basename(task_file).split(".")[0]
+                if not os.path.isfile(f"data/tasks/{task_name}.zip"):
+                    add_new_task(task_name, pyro_bucket, host, credentials)
 
-        # except Exception:
-        #     logging.warning("Unable to add new task")
+        except Exception:
+            logging.warning("Unable to add new task")
 
         task_list = get_task_list(host, credentials)
         df = pd.read_csv("data/task_database.csv", index_col=0)
         df_assigned = df.loc[~df["assign_time"].isnull()]
         for task in task_list:
             if task.status == "completed":
-                # try:
-                process_task(pyro_bucket, task, save_to_s3=True, reload_task=True, reassign=True)
-                # except Exception:
-                #     logging.warning("Unable to process completed task")
+                try:
+                    process_task(pyro_bucket, task, save_to_s3=True, reload_task=True, reassign=True)
+                except Exception:
+                    logging.warning("Unable to process completed task")
             else:
-                # try:
-                if task.name in df_assigned["task_name"].values:
-                    data = df_assigned[df_assigned["task_name"] == task.name]
-                    if len(data) == 1:
-                        assign_time = datetime.strptime(
-                            data["assign_time"].values[0].split(".")[0], "%Y-%m-%d %H:%M:%S"
-                        )
-                        dt = datetime.now() - assign_time
-                        if dt.days >= 1:
-                            process_task(pyro_bucket, task, save_to_s3=False, reload_task=True, reassign=True)
+                try:
+                    if task.name in df_assigned["task_name"].values:
+                        data = df_assigned[df_assigned["task_name"] == task.name]
+                        if len(data) == 1:
+                            assign_time = datetime.strptime(
+                                data["assign_time"].values[0].split(".")[0], "%Y-%m-%d %H:%M:%S"
+                            )
+                            dt = datetime.now() - assign_time
+                            if dt.days >= 1:
+                                process_task(pyro_bucket, task, save_to_s3=False, reload_task=True, reassign=True)
 
-                # except Exception:
-                #     logging.warning("Unable to process olf task")
+                except Exception:
+                    logging.warning("Unable to process olf task")
         time.sleep(max(update_delta - time.time() + start_ts, 1))
