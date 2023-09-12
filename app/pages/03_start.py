@@ -43,11 +43,11 @@ st.write(
 
 if st.button("Générer des identifiants, ca peut prendre quelques secondes ⏳", use_container_width=True):
 
-    st.write("Voici tes identifiants, note les bien pour accéder à la plateforme :")
     (username, password) = get_credentials()
     if password is None:
         st.write(f"Il n'y a plus de tâche d'annotation disponible, merci de réessayer plus tard")
     else:
+        st.write("Voici tes identifiants, note les bien pour accéder à la plateforme :")
         st.write("username: ", username)
         st.write("password: ", password)
 
