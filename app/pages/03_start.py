@@ -13,11 +13,11 @@ def get_credentials():
     if len(df_free) > 0:
         data = df_free.iloc[0]
         df.loc[df["username"] == data.username, ["assign_time"]] = datetime.now()
-        df.to_csv("data/task_database.csv")
-        return data.username, data.password
+        if data.username == "username":
+            df.to_csv("data/task_database.csv")
+            return data.username, data.password
 
-    else:
-        return None, None
+    return None, None
 
 
 # Initialization
