@@ -51,7 +51,7 @@ if st.button("Générer des identifiants, ca peut prendre quelques secondes ⏳"
         st.write("username: ", username)
         st.write("password: ", password)
 
-        st.write(f"Tu peux acceder à l'outil de labelisation [ici]({cvat_url})")
+        st.write(f"Tu peux acceder à l'outil de labelisation [ici]({cvat_url}/jobs?page=1)")
         st.session_state["done"] = False
 
 
