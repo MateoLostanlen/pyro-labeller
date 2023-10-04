@@ -41,6 +41,39 @@ st.write(
     supporté par CVAT est Google Chrome, nous te recommandons de l’utiliser pour une expérience plus fluide."""
 )
 
+st.write(
+    """Attention l’outils n’est pas utilisable avec un téléphone portable, tu dois prendre un ordinateur 💻
+
+Petit rappel des étapes avant de commencer à annoter:
+
+- 1️⃣ Génères tes identifiants 
+- 2️⃣ Click sur le lien puis connect toi
+- 3️⃣ Change d'organisation en haut à droite, tu dois être dans l’organisation Pyronear. 
+- 4️⃣ Tu peux commencer à annoter. """
+)
+
+st.write(
+    """
+
+Lors de l’annotation :
+
+ Les raccourcis claviers à connaître :
+- “F” pour avancer image après image
+- “D” pour reculer
+- “N” pour dessiner un rectangle (encadrer une fumée)
+- “Suppr” pour supprimer un rectangle (“FN” + retour en arrière sur clavier mac)
+
+
+N’oublie pas de sauvegarder ton travail régulièrement (bouton “Save”)
+
+Quand tu as fini, “Menu” puis “Finish the job”
+
+Si tu veux recommencer une session, déconnecte toi et crée de nouveaux identifiants
+
+On te conseil de garder cette page ouverte pour garder les infos sous les yeux 👀
+"""
+)
+
 if st.button("Générer des identifiants, ca peut prendre quelques secondes ⏳", use_container_width=True):
 
     (username, password) = get_credentials()
